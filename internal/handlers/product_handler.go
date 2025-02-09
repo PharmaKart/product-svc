@@ -77,7 +77,7 @@ func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRe
 }
 
 func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProductsRequest) (*proto.ListProductsResponse, error) {
-	products, err := h.ProductService.ListProducts(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	products, total, err := h.ProductService.ListProducts(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,12 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 		})
 	}
 
-	return &proto.ListProductsResponse{Products: pbProducts}, nil
+	return &proto.ListProductsResponse{
+		Products: pbProducts,
+		Total:    total,
+		Page:     req.Page,
+		Limit:    req.Limit,
+	}, nil
 }
 
 func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdateProductRequest) (*proto.UpdateProductResponse, error) {

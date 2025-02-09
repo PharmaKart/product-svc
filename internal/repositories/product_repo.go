@@ -10,7 +10,7 @@ type ProductRepository interface {
 	CreateProduct(product *models.Product) (string, error)
 	GetProduct(id string) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
-	ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error)
+	ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, int32, error)
 	UpdateProduct(product *models.Product) error
 	DeleteProduct(id string) error
 	UpdateStock(id uuid.UUID, quantity int) error
@@ -43,8 +43,9 @@ func (r *productRepository) GetProductByName(name string) (*models.Product, erro
 	return &product, err
 }
 
-func (r *productRepository) ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error) {
+func (r *productRepository) ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, int32, error) {
 	var products []models.Product
+	var total int64
 	if page <= 0 {
 		page = 1
 	}
@@ -65,7 +66,15 @@ func (r *productRepository) ListProducts(page int32, limit int32, sortBy string,
 	}
 
 	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&products).Error
-	return products, err
+	if err != nil {
+		return nil, 0, err
+	}
+
+	err = query.Model(&models.Product{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return products, int32(total), err
 
 }
 

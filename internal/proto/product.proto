@@ -73,6 +73,9 @@ message ListProductsRequest {
 
 message ListProductsResponse {
     repeated Product products = 1;
+    int32 total = 2;
+    int32 page = 3;
+    int32 limit = 4;
 }
 
 message UpdateStockRequest {
