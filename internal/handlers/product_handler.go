@@ -46,7 +46,15 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *proto.CreatePro
 		return nil, err
 	}
 
-	return &proto.CreateProductResponse{ProductId: productID, Message: "Product added successfully"}, nil
+	return &proto.CreateProductResponse{
+		Id:                   productID,
+		Name:                 product.Name,
+		Description:          *product.Description,
+		Price:                product.Price,
+		Stock:                int32(product.Stock),
+		RequiresPrescription: product.RequiresPrescription,
+		ImageUrl:             *product.ImageURL,
+	}, nil
 }
 
 func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRequest) (*proto.GetProductResponse, error) {
@@ -69,7 +77,7 @@ func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRe
 }
 
 func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProductsRequest) (*proto.ListProductsResponse, error) {
-	products, err := h.ProductService.ListProducts()
+	products, err := h.ProductService.ListProducts(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
 		return nil, err
 	}

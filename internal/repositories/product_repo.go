@@ -10,7 +10,7 @@ type ProductRepository interface {
 	CreateProduct(product *models.Product) (string, error)
 	GetProduct(id string) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
-	ListProducts() ([]models.Product, error)
+	ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error)
 	UpdateProduct(product *models.Product) error
 	DeleteProduct(id string) error
 	UpdateStock(id uuid.UUID, quantity int) error
@@ -43,10 +43,30 @@ func (r *productRepository) GetProductByName(name string) (*models.Product, erro
 	return &product, err
 }
 
-func (r *productRepository) ListProducts() ([]models.Product, error) {
+func (r *productRepository) ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error) {
 	var products []models.Product
-	err := r.db.Find(&products).Error
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	query := r.db
+	if filter != "" && filterValue != "" {
+		query = query.Where(filter+" = ?", filterValue)
+	}
+
+	if sortBy != "" {
+		if sortOrder == "" {
+			sortOrder = "asc"
+		}
+		query = query.Order(sortBy + " " + sortOrder)
+	}
+
+	err := query.Offset(int((page - 1) * limit)).Limit(int(limit)).Find(&products).Error
 	return products, err
+
 }
 
 func (r *productRepository) UpdateProduct(product *models.Product) error {

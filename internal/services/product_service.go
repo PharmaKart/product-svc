@@ -9,7 +9,7 @@ import (
 type ProductService interface {
 	CreateProduct(product *models.Product) (string, error)
 	GetProduct(id string) (*models.Product, error)
-	ListProducts() ([]models.Product, error)
+	ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error)
 	UpdateProduct(id string, name string, description string, price float64, imageURL string) error
 	DeleteProduct(id string) error
 	UpdateStock(log *models.InventoryLog) error
@@ -49,8 +49,8 @@ func (s *productService) GetProduct(id string) (*models.Product, error) {
 	return product, nil
 }
 
-func (s *productService) ListProducts() ([]models.Product, error) {
-	products, err := s.ProductRepository.ListProducts()
+func (s *productService) ListProducts(page int32, limit int32, sortBy string, sortOrder string, filter string, filterValue string) ([]models.Product, error) {
+	products, err := s.ProductRepository.ListProducts(page, limit, sortBy, sortOrder, filter, filterValue)
 	if err != nil {
 		return nil, err
 	}

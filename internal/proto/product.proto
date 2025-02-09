@@ -28,8 +28,13 @@ message CreateProductRequest {
 }
 
 message CreateProductResponse {
-    string product_id = 1;
-    string message = 2;
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 stock = 5;
+    bool requires_prescription = 6;
+    string image_url = 7;
 }
 
 message UpdateProductRequest {
@@ -57,7 +62,14 @@ message GetProductResponse {
     Product product = 1;
 }
 
-message ListProductsRequest {}
+message ListProductsRequest {
+    int32 page = 1;
+    int32 limit = 2;
+    string sort_by = 3;
+    string sort_order = 4;
+    string filter = 5;
+    string filter_value = 6;
+}
 
 message ListProductsResponse {
     repeated Product products = 1;
