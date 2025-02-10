@@ -10,7 +10,6 @@ import (
 	"github.com/PharmaKart/product-svc/pkg/utils"
 
 	"google.golang.org/grpc"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -20,9 +19,17 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 
+	// Initialize database connection
+	db, err := utils.ConnectDB(cfg)
+	if err != nil {
+		utils.Logger.Fatal("Failed to connect to database", map[string]interface{}{
+			"error": err,
+		})
+	}
+
 	//Initialize repositories
-	productrepo := repositories.NewProductRepository(&gorm.DB{})
-	inventorylogrepo := repositories.NewInventoryLogRepository(&gorm.DB{})
+	productrepo := repositories.NewProductRepository(db)
+	inventorylogrepo := repositories.NewInventoryLogRepository(db)
 
 	// Initialize handlers
 	productHandler := handlers.NewProductHandler(productrepo, inventorylogrepo)
