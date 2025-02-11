@@ -97,7 +97,7 @@ func (s *productService) UpdateStock(log *models.InventoryLog) error {
 	}
 
 	// Update the stock in the database
-	if err := s.ProductRepository.UpdateStock(log.ProductID, log.Quantity); err != nil {
+	if err := s.ProductRepository.UpdateStock(log.ProductID, log.QuantityChange); err != nil {
 		return err
 	}
 

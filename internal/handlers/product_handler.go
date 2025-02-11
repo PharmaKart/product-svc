@@ -104,7 +104,7 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 }
 
 func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdateProductRequest) (*proto.UpdateProductResponse, error) {
-	err := h.ProductService.UpdateProduct(req.Product.Id, req.Product.Name, req.Product.Description, req.Product.Price, req.Product.ImageUrl)
+	err := h.ProductService.UpdateProduct(req.ProductId, req.Product.Name, req.Product.Description, req.Product.Price, req.Product.ImageUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -128,9 +128,9 @@ func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStock
 	}
 
 	log := &models.InventoryLog{
-		ProductID:  productId,
-		Quantity:   int(req.Quantity),
-		ChangeType: req.Reason,
+		ProductID:      productId,
+		QuantityChange: int(req.QuantityChange),
+		ChangeType:     req.Reason,
 	}
 
 	err = h.ProductService.UpdateStock(log)

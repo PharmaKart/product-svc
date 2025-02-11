@@ -25,19 +25,17 @@ func ValidateProductInput(product *models.Product) error {
 	}
 
 	// Validate image URL to be a valid S3 URL
-	if product.ImageURL != nil {
-		if !strings.HasPrefix(strings.TrimSpace(*product.ImageURL), "https://s3.amazonaws.com/") {
-			return errors.New("Invalid image uploaded")
-		}
-	}
+	// TODO: Uncomment this after adding S3 upload
+	// if product.ImageURL != nil {
+	// 	if !strings.HasPrefix(strings.TrimSpace(*product.ImageURL), "https://s3.amazonaws.com/") {
+	// 		return errors.New("Invalid image uploaded")
+	// 	}
+	// }
 
 	return nil
 }
 
 func ValidateInventoryInput(inventory *models.InventoryLog) error {
-	if inventory.Quantity <= 0 {
-		return errors.New("quantity must be greater than 0")
-	}
 
 	if inventory.ChangeType != "order_placed" && inventory.ChangeType != "order_cancelled" && inventory.ChangeType != "stock_added" {
 		return errors.New("invalid change type")

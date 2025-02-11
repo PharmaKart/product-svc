@@ -80,7 +80,7 @@ message ListProductsResponse {
 
 message UpdateStockRequest {
     string product_id = 1;
-    int32 quantity = 2;
+    int32 quantity_change = 2;
     string reason = 3; // "order_placed", "order_cancelled", "stock_added"
 }
 

@@ -87,5 +87,5 @@ func (r *productRepository) DeleteProduct(id string) error {
 }
 
 func (r *productRepository) UpdateStock(id uuid.UUID, quantity int) error {
-	return r.db.Model(&models.Product{}).Where("id = ?", id).Update("stock", gorm.Expr("stock - ?", quantity)).Error
+	return r.db.Model(&models.Product{}).Where("id = ?", id).Update("stock", gorm.Expr("stock + ?", quantity)).Error
 }
