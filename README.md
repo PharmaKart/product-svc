@@ -102,11 +102,12 @@ The service will be available at:
 The service requires the following environment variables. Create a `.env` file in the `product-svc` directory with the following:
 
 ```env
-PRODUCT_DB_HOST=postgres
-PRODUCT_DB_PORT=5432
-PRODUCT_DB_USER=postgres
-PRODUCT_DB_PASSWORD=yourpassword
-PRODUCT_DB_NAME=pharmakartdb
+PORT=50052
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+DB_NAME=pharmakartdb
 ```
 
 ---
