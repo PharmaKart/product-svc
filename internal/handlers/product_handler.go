@@ -8,6 +8,8 @@ import (
 	"github.com/PharmaKart/product-svc/internal/proto"
 	"github.com/PharmaKart/product-svc/internal/repositories"
 	"github.com/PharmaKart/product-svc/internal/services"
+	"github.com/PharmaKart/product-svc/pkg/errors"
+	"github.com/PharmaKart/product-svc/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -43,7 +45,23 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *proto.CreatePro
 
 	productID, err := h.ProductService.CreateProduct(product)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.CreateProductResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.CreateProductResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.CreateProductResponse{
@@ -60,7 +78,23 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *proto.CreatePro
 func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRequest) (*proto.GetProductResponse, error) {
 	product, err := h.ProductService.GetProduct(req.ProductId)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.GetProductResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.GetProductResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.GetProductResponse{
@@ -79,7 +113,23 @@ func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRe
 func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProductsRequest) (*proto.ListProductsResponse, error) {
 	products, total, err := h.ProductService.ListProducts(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.ListProductsResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.ListProductsResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	var pbProducts []*proto.Product
@@ -106,7 +156,23 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdateProductRequest) (*proto.UpdateProductResponse, error) {
 	err := h.ProductService.UpdateProduct(req.ProductId, req.Product.Name, req.Product.Description, req.Product.Price, req.Product.ImageUrl)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.UpdateProductResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.UpdateProductResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.UpdateProductResponse{Message: "Product updated successfully"}, nil
@@ -115,7 +181,23 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdatePro
 func (h *productHandler) DeleteProduct(ctx context.Context, req *proto.DeleteProductRequest) (*proto.DeleteProductResponse, error) {
 	err := h.ProductService.DeleteProduct(req.ProductId)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.DeleteProductResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.DeleteProductResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.DeleteProductResponse{Message: "Product deleted successfully"}, nil
@@ -124,7 +206,14 @@ func (h *productHandler) DeleteProduct(ctx context.Context, req *proto.DeletePro
 func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStockRequest) (*proto.UpdateStockResponse, error) {
 	productId, err := uuid.Parse(req.ProductId)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid product ID")
+		return &proto.UpdateStockResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.ValidationError),
+				Message: "Invalid product ID",
+				Details: utils.ConvertMapToKeyValuePairs(map[string]string{"productId": fmt.Sprintf("Invalid UUID: %s", req.ProductId)}),
+			},
+		}, nil
 	}
 
 	log := &models.InventoryLog{
@@ -135,7 +224,23 @@ func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStock
 
 	err = h.ProductService.UpdateStock(log)
 	if err != nil {
-		return nil, err
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.UpdateStockResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.UpdateStockResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
 	}
 
 	return &proto.UpdateStockResponse{Message: "Stock updated successfully"}, nil
