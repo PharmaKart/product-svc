@@ -1,7 +1,10 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/PharmaKart/product-svc/internal/models"
+	"github.com/PharmaKart/product-svc/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -19,11 +22,25 @@ func NewInventoryLogRepository(db *gorm.DB) InventoryLogRepository {
 }
 
 func (r *inventoryLogRepository) LogChange(log *models.InventoryLog) error {
-	return r.db.Create(log).Error
+	if err := r.db.Create(log).Error; err != nil {
+		return errors.NewInternalError(err)
+	}
+	return nil
 }
 
 func (r *inventoryLogRepository) GetLogsByProductID(productID string) ([]models.InventoryLog, error) {
 	var logs []models.InventoryLog
-	err := r.db.Where("product_id = ?", productID).Find(&logs).Error
-	return logs, err
+
+	if err := r.db.Where("product_id = ?", productID).Find(&logs).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errors.NewNotFoundError(fmt.Sprintf("No inventory logs found for product ID '%s'", productID))
+		}
+		return nil, errors.NewInternalError(err)
+	}
+
+	if len(logs) == 0 {
+		return nil, errors.NewNotFoundError(fmt.Sprintf("No inventory logs found for product ID '%s'", productID))
+	}
+
+	return logs, nil
 }
