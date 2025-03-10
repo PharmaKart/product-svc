@@ -65,6 +65,7 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *proto.CreatePro
 	}
 
 	return &proto.CreateProductResponse{
+		Success:              true,
 		Id:                   productID,
 		Name:                 product.Name,
 		Description:          *product.Description,
@@ -98,6 +99,7 @@ func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRe
 	}
 
 	return &proto.GetProductResponse{
+		Success: true,
 		Product: &proto.Product{
 			Id:                   product.ID.String(),
 			Name:                 product.Name,
@@ -111,7 +113,15 @@ func (h *productHandler) GetProduct(ctx context.Context, req *proto.GetProductRe
 }
 
 func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProductsRequest) (*proto.ListProductsResponse, error) {
-	products, total, err := h.ProductService.ListProducts(req.Page, req.Limit, req.SortBy, req.SortOrder, req.Filter, req.FilterValue)
+	var filter models.Filter
+	if req.Filter != nil {
+		filter = models.Filter{
+			Column:   req.Filter.Column,
+			Operator: req.Filter.Operator,
+			Value:    req.Filter.Value,
+		}
+	}
+	products, total, err := h.ProductService.ListProducts(filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.ListProductsResponse{
@@ -146,6 +156,7 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 	}
 
 	return &proto.ListProductsResponse{
+		Success:  true,
 		Products: pbProducts,
 		Total:    total,
 		Page:     req.Page,
@@ -175,7 +186,10 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdatePro
 		}, nil
 	}
 
-	return &proto.UpdateProductResponse{Message: "Product updated successfully"}, nil
+	return &proto.UpdateProductResponse{
+		Success: true,
+		Message: "Product updated successfully",
+	}, nil
 }
 
 func (h *productHandler) DeleteProduct(ctx context.Context, req *proto.DeleteProductRequest) (*proto.DeleteProductResponse, error) {
@@ -200,7 +214,10 @@ func (h *productHandler) DeleteProduct(ctx context.Context, req *proto.DeletePro
 		}, nil
 	}
 
-	return &proto.DeleteProductResponse{Message: "Product deleted successfully"}, nil
+	return &proto.DeleteProductResponse{
+		Success: true,
+		Message: "Product deleted successfully",
+	}, nil
 }
 
 func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStockRequest) (*proto.UpdateStockResponse, error) {
@@ -243,5 +260,8 @@ func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStock
 		}, nil
 	}
 
-	return &proto.UpdateStockResponse{Message: "Stock updated successfully"}, nil
+	return &proto.UpdateStockResponse{
+		Success: true,
+		Message: "Stock updated successfully",
+	}, nil
 }
