@@ -31,7 +31,7 @@ func ValidateProductInput(product *models.Product) error {
 		s3Pattern := `^https://[^.]+\.s3\.[^.]+\.amazonaws\.com/`
 		matched, err := regexp.MatchString(s3Pattern, trimmedURL)
 		if err != nil || !matched {
-			validationErrors["imageURL"] = "Invalid S3 image URL"
+			validationErrors["image"] = "Invalid S3 image URL"
 		}
 	}
 
