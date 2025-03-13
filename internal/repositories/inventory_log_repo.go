@@ -1,16 +1,17 @@
 package repositories
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/PharmaKart/product-svc/internal/models"
 	"github.com/PharmaKart/product-svc/pkg/errors"
+	"github.com/PharmaKart/product-svc/pkg/utils"
 	"gorm.io/gorm"
 )
 
 type InventoryLogRepository interface {
 	LogChange(log *models.InventoryLog) error
-	GetLogsByProductID(productID string) ([]models.InventoryLog, error)
+	GetLogsByProductID(productID string, filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.InventoryLog, int32, error)
 }
 
 type inventoryLogRepository struct {
@@ -28,19 +29,77 @@ func (r *inventoryLogRepository) LogChange(log *models.InventoryLog) error {
 	return nil
 }
 
-func (r *inventoryLogRepository) GetLogsByProductID(productID string) ([]models.InventoryLog, error) {
+func (r *inventoryLogRepository) GetLogsByProductID(productID string, filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.InventoryLog, int32, error) {
 	var logs []models.InventoryLog
+	var total int64
 
-	if err := r.db.Where("product_id = ?", productID).Find(&logs).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewNotFoundError(fmt.Sprintf("No inventory logs found for product ID '%s'", productID))
+	allowedColumns := utils.GetModelColumns(&models.InventoryLog{})
+
+	allowedOperators := map[string]string{
+		"eq":      "=",           // Equal to
+		"neq":     "!=",          // Not equal to
+		"gt":      ">",           // Greater than
+		"gte":     ">=",          // Greater than or equal to
+		"lt":      "<",           // Less than
+		"lte":     "<=",          // Less than or equal to
+		"like":    "LIKE",        // LIKE for pattern matching
+		"ilike":   "ILIKE",       // Case insensitive LIKE (for PostgreSQL)
+		"in":      "IN",          // IN for multiple values
+		"null":    "IS NULL",     // IS NULL check
+		"notnull": "IS NOT NULL", // IS NOT NULL check
+	}
+
+	query := r.db.Model(&models.InventoryLog{})
+	if filter != (models.Filter{}) {
+		if _, allowed := allowedColumns[filter.Column]; !allowed {
+			return nil, 0, errors.NewBadRequestError("invalid filter column: " + filter.Column)
 		}
-		return nil, errors.NewInternalError(err)
+
+		op, allowed := allowedOperators[filter.Operator]
+		if !allowed {
+			return nil, 0, errors.NewBadRequestError("invalid filter operator: " + filter.Operator)
+		}
+
+		switch filter.Operator {
+		case "like", "ilike":
+			query = query.Where(filter.Column+" "+op+" ?", "%"+filter.Value+"%")
+		case "in":
+			values := strings.Split(filter.Value, ",")
+			query = query.Where(filter.Column+" "+op+" (?)", values)
+		case "null", "notnull":
+			query = query.Where(filter.Column + " " + op)
+		default:
+			query = query.Where(filter.Column+" "+op+" ?", filter.Value)
+		}
 	}
 
-	if len(logs) == 0 {
-		return nil, errors.NewNotFoundError(fmt.Sprintf("No inventory logs found for product ID '%s'", productID))
+	if sortBy != "" {
+		if _, allowed := allowedColumns[sortBy]; !allowed {
+			return nil, 0, errors.NewBadRequestError("invalid sort column: " + sortBy)
+		}
+
+		sortOrder = strings.ToLower(sortOrder)
+		if sortOrder != "asc" && sortOrder != "desc" {
+			sortOrder = "asc"
+		}
+
+		query = query.Order(sortBy + " " + sortOrder)
 	}
 
-	return logs, nil
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, errors.NewInternalError(err)
+	}
+
+	if limit > 0 {
+		offset := max(int((page-1)*limit), 0)
+		query = query.Offset(offset).Limit(int(limit))
+	}
+
+	err = query.Find(&logs).Error
+	if err != nil {
+		return nil, 0, errors.NewInternalError(err)
+	}
+
+	return logs, int32(total), nil
 }

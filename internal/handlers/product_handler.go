@@ -20,6 +20,7 @@ type ProductHandler interface {
 	UpdateProduct(ctx context.Context, req *proto.UpdateProductRequest) (*proto.UpdateProductResponse, error)
 	DeleteProduct(ctx context.Context, req *proto.DeleteProductRequest) (*proto.DeleteProductResponse, error)
 	UpdateStock(ctx context.Context, req *proto.UpdateStockRequest) (*proto.UpdateStockResponse, error)
+	GetInventoryLogs(ctx context.Context, req *proto.GetInventoryLogsRequest) (*proto.GetInventoryLogsResponse, error)
 }
 
 type productHandler struct {
@@ -263,5 +264,56 @@ func (h *productHandler) UpdateStock(ctx context.Context, req *proto.UpdateStock
 	return &proto.UpdateStockResponse{
 		Success: true,
 		Message: "Stock updated successfully",
+	}, nil
+}
+
+func (h *productHandler) GetInventoryLogs(ctx context.Context, req *proto.GetInventoryLogsRequest) (*proto.GetInventoryLogsResponse, error) {
+	var filter models.Filter
+	if req.Filter != nil {
+		filter = models.Filter{
+			Column:   req.Filter.Column,
+			Operator: req.Filter.Operator,
+			Value:    req.Filter.Value,
+		}
+	}
+
+	logs, total, err := h.ProductService.GetInventoryLogs(req.ProductId, filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
+	if err != nil {
+		if appErr, ok := errors.IsAppError(err); ok {
+			return &proto.GetInventoryLogsResponse{
+				Success: false,
+				Error: &proto.Error{
+					Type:    string(appErr.Type),
+					Message: appErr.Message,
+					Details: utils.ConvertMapToKeyValuePairs(appErr.Details),
+				},
+			}, nil
+		}
+		return &proto.GetInventoryLogsResponse{
+			Success: false,
+			Error: &proto.Error{
+				Type:    string(errors.InternalError),
+				Message: "An unexpected error occurred",
+			},
+		}, nil
+	}
+
+	var pbLogs []*proto.InventoryLog
+	for _, log := range logs {
+		pbLogs = append(pbLogs, &proto.InventoryLog{
+			Id:             log.ID.String(),
+			ProductId:      log.ProductID.String(),
+			QuantityChange: int32(log.QuantityChange),
+			ChangeType:     log.ChangeType,
+			CreatedAt:      log.CreatedAt.String(),
+		})
+	}
+
+	return &proto.GetInventoryLogsResponse{
+		Success: true,
+		Logs:    pbLogs,
+		Total:   total,
+		Page:    req.Page,
+		Limit:   req.Limit,
 	}, nil
 }
