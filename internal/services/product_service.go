@@ -13,6 +13,7 @@ type ProductService interface {
 	UpdateProduct(id string, name string, description string, price float64, imageURL string) error
 	DeleteProduct(id string) error
 	UpdateStock(log *models.InventoryLog) error
+	GetInventoryLogs(productID string, filters models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.InventoryLog, int32, error)
 }
 
 type productService struct {
@@ -107,4 +108,12 @@ func (s *productService) UpdateStock(log *models.InventoryLog) error {
 	}
 
 	return nil
+}
+
+func (s *productService) GetInventoryLogs(productID string, filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.InventoryLog, int32, error) {
+	logs, total, err := s.InventoryLogRepository.GetLogsByProductID(productID, filter, sortBy, sortOrder, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	return logs, total, nil
 }
