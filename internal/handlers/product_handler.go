@@ -122,7 +122,7 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 			Value:    req.Filter.Value,
 		}
 	}
-	products, total, err := h.ProductService.ListProducts(filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
+	products, total, err := h.ProductService.ListProducts(req.Search, filter, req.SortBy, req.SortOrder, req.Page, req.Limit)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.ListProductsResponse{
