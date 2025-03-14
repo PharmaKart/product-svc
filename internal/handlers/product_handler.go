@@ -166,7 +166,7 @@ func (h *productHandler) ListProducts(ctx context.Context, req *proto.ListProduc
 }
 
 func (h *productHandler) UpdateProduct(ctx context.Context, req *proto.UpdateProductRequest) (*proto.UpdateProductResponse, error) {
-	err := h.ProductService.UpdateProduct(req.ProductId, req.Product.Name, req.Product.Description, req.Product.Price, req.Product.ImageUrl)
+	err := h.ProductService.UpdateProduct(req.ProductId, req.Product.Name, req.Product.Description, req.Product.Price, req.Product.RequiresPrescription, req.Product.ImageUrl)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			return &proto.UpdateProductResponse{
