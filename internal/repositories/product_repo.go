@@ -15,7 +15,7 @@ type ProductRepository interface {
 	CreateProduct(product *models.Product) (string, error)
 	GetProduct(id string) (*models.Product, error)
 	GetProductByName(name string) (*models.Product, error)
-	ListProducts(filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.Product, int32, error)
+	ListProducts(search string, filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.Product, int32, error)
 	UpdateProduct(product *models.Product) error
 	DeleteProduct(id string) error
 	UpdateStock(id uuid.UUID, quantity int) error
@@ -71,7 +71,7 @@ func (r *productRepository) GetProductByName(name string) (*models.Product, erro
 	return &product, nil
 }
 
-func (r *productRepository) ListProducts(filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.Product, int32, error) {
+func (r *productRepository) ListProducts(search string, filter models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.Product, int32, error) {
 	var products []models.Product
 	var total int64
 
@@ -92,6 +92,10 @@ func (r *productRepository) ListProducts(filter models.Filter, sortBy string, so
 	}
 
 	query := r.db.Model(&models.Product{})
+
+	if search != "" {
+		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
 
 	if filter != (models.Filter{}) {
 		if _, allowed := allowedColumns[filter.Column]; !allowed {
