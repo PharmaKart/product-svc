@@ -10,7 +10,7 @@ type ProductService interface {
 	CreateProduct(product *models.Product) (string, error)
 	GetProduct(id string) (*models.Product, error)
 	ListProducts(filters models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.Product, int32, error)
-	UpdateProduct(id string, name string, description string, price float64, imageURL string) error
+	UpdateProduct(id string, name string, description string, price float64, requiresPrescription bool, imageURL string) error
 	DeleteProduct(id string) error
 	UpdateStock(log *models.InventoryLog) error
 	GetInventoryLogs(productID string, filters models.Filter, sortBy string, sortOrder string, page, limit int32) ([]models.InventoryLog, int32, error)
@@ -58,7 +58,7 @@ func (s *productService) ListProducts(filter models.Filter, sortBy string, sortO
 	return products, total, nil
 }
 
-func (s *productService) UpdateProduct(id string, name string, description string, price float64, imageURL string) error {
+func (s *productService) UpdateProduct(id string, name string, description string, price float64, requiresPrescription bool, imageURL string) error {
 	// Get the product from the database
 	product, err := s.ProductRepository.GetProduct(id)
 	if err != nil {
@@ -69,7 +69,10 @@ func (s *productService) UpdateProduct(id string, name string, description strin
 	product.Name = name
 	product.Description = &description
 	product.Price = price
-	product.ImageURL = &imageURL
+	product.RequiresPrescription = requiresPrescription
+	if imageURL != "" {
+		product.ImageURL = &imageURL
+	}
 
 	// Validate the product input
 	if err := utils.ValidateProductInput(product); err != nil {
