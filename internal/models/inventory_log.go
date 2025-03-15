@@ -12,7 +12,7 @@ type InventoryLog struct {
 	ProductID      uuid.UUID `gorm:"not null"`
 	ChangeType     string    `gorm:"type:varchar(50);not null;check:change_type IN ('order_placed', 'order_cancelled', 'stock_added')"`
 	QuantityChange int       `gorm:"not null"`
-	CreatedAt      time.Time `gorm:"default:now()"`
+	CreatedAt      time.Time `gorm:"type:timestamptz;default:now()"`
 }
 
 func (il *InventoryLog) BeforeCreate(tx *gorm.DB) (err error) {

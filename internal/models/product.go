@@ -15,8 +15,8 @@ type Product struct {
 	Stock                int     `gorm:"not null;check:stock >= 0"`
 	RequiresPrescription bool    `gorm:"default:false"`
 	ImageURL             *string
-	CreatedAt            time.Time `gorm:"default:now()"`
-	UpdatedAt            time.Time `gorm:"default:now()"`
+	CreatedAt            time.Time `gorm:"type:timestamptz;default:now()"`
+	UpdatedAt            time.Time `gorm:"type:timestamptz;default:now()"`
 }
 
 func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
